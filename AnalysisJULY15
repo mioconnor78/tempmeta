@@ -34,10 +34,16 @@ dat1 <- data.fat
 # Temperature affects dynamics [for control treatments]:
 ##################################################################################
 
-#I've changed the control/experimental codes for the database, so I'm reruning the BCR fig. This now includes terrestrial systems, but only ones where the CR pairs are plant-herbivore. 
+#I've changed the control/experimental codes for the database, so I'm rerunning the BCR fig. This now includes terrestrial systems, but only ones where the CR pairs are plant-herbivore. 
 
-## selecting data for autotroph responses for studies with CFCs
-dat<-dat1[(dat1$trophy=='A'),]
+## create a subset of the database with control treatments for abiotic variables; 
+datc <- dat1[which((dat1$TrtLevelTypeA=='control')),]
+
+## select data for autotroph responses for studies with CFCs
+# dat<-dat1[(dat1$trophy=='A'),]
+# dat<-datc[(datc$trophy=='A'),]
+
+
 
 #Add a column coding each experiment based on whether it has a consumer free control. 
 CFC <- ddply(dat[(dat$MaxTrophicLev=='1'),], .(RefShort, ExptA), summarize, mean(dat$logAbundTot.Auto))
@@ -46,18 +52,18 @@ dat.cfca <- merge(dat, CFC, all = TRUE)
 dat.cfc <- dat.cfca[which(dat.cfca$cfc=='Y'),]
 
 # Bcr = K / R*, so tot Auto from maxtrophlev = 1 / tot auto from maxtrophlev = 2
-# so for each exptA, we want to est Bcr. then we could use match to paste it back in. 
+# so for each exptA (abiotic control trt), we want to est Bcr. then we could use match to paste it back in. 
 Bcr1 <- ddply(dat.cfc, .(RefShort, ExptA, TempMean, MaxTrophicLev), summarize, length(unique(abundTot.Aut)))
-Kb <- ddply(dat.cfc[(dat.cfc$MaxTrophicLev=='1'),], .(RefShort, ExptA, TempMean), summarize, mean(abundTot.Aut))
-stressor <- ddply(dat.cfc[(dat.cfc$MaxTrophicLev=='1'),], .(RefShort, ExptA, TempMean), summarize, unique(StressorAdded))
+Kb <- ddply(dat.cfc[(dat.cfc$MaxTrophicLev=='1'),], .(RefShort, ExptA, TempMean, TrtLevelTypeB), summarize, mean(abundTot.Aut))
+#experimental <- ddply(dat.cfc[(dat.cfc$MaxTrophicLev=='1'),], .(RefShort, ExptA, TempMean), summarize, unique(StressorAdded))
 R.star <- ddply(dat.cfc[(dat.cfc$MaxTrophicLev=='2'),], .(RefShort, ExptA, TempMean), summarize, mean(abundTot.Aut))
 cfc.size <- ddply(dat.cfc[(dat.cfc$MaxTrophicLev=='1'),], .(RefShort, ExptA, TempMean), summarize, mean(BodySizeGen))
-names(Kb) <- c('RefShort', 'ExptA', 'TempMean', 'K')
+names(Kb) <- c('RefShort', 'ExptA', 'TempMean', 'BioticTrt', 'K')
 names(R.star) <- c('RefShort', 'ExptA', 'TempMean', 'R.star')
 Kb$R.star <- R.star$R.star
 Kb$Bcr <- Kb$K / Kb$R.star
 Kb$size <- cfc.size[,4]
-Kb$Stressor <- stressor[,4]
+#Kb$Stressor <- stressor[,4]
 Kb$tempBcrID <- paste(Kb$ExptA, Kb$TempMean)
 
 dat.cfc$tempBcrID <- paste(dat.cfc$ExptA, dat.cfc$TempMean)
@@ -70,17 +76,13 @@ trellis.device()
 scatterplot((Bcr)~TempMean | ExptA, data=Kb, smoother=FALSE, by.groups=TRUE, legend.plot=FALSE, legend.coords="topright", cex.lab=2, xlab='Temperature Mean (C)', ylab='Bcr', main='Bcr, CFC expts', pch = c(19,19,19,15,19,15,19,19,19,19,19,15,19), cex = 2, col = (c(1, 'orange', 2,2,  3,3, 4,'lightblue', 'lightblue', 6,6, 8,8)), lwd = 3)
 
 trellis.device()
-# squares = stressor applied
+# squares = experimental treatment
 scatterplot((Bcr)~TempMean | ExptA, data=dat.cfc, smoother=FALSE, by.groups=TRUE, legend.plot=TRUE, legend.coords="topright", cex.lab=2, xlab='Temperature Mean (C)', ylab='Bcr', main='', pch = c(19,19,19,22,19,22,19,19, 19,19,22,19), cex = 2, col = (c(1,1,2,2, 'orange', 3,3, 4,4, 'purple','purple', 6,6, 8,8, 'brown', 'brown', 'seagreen', 'seagreen', 'orange', 'orange', 'lightblue', 'lightblue')), lwd = 3, cex.axis = 1.5)
 
 # July 15th evening: Ok, generally warming strengthens Bcr, but a) now models aren't all running and I'm too tired to figure it out, and b) did i have the symbols wrong on the last analysis?? cause now two of the 'stressor' studies are increasing with warming...??
 # next steps: move on for now, but come back to this analysis, and consider including non-Autotrophic resources?
 
-
-
-
-## create a subset of the database with control treatments
-datc <- dat1[which(dat1$TrtLevelType=='control'),]
+# August 5th. Now I'm using the code above to calculate Brc (K/R*) for experiments with consumer free controls, for the abiotic control levels only. I'm a bit confused here; i need to stop for today, and start this when I can get my head in the game. 
 
 
 ####################################################################################
