@@ -25,9 +25,6 @@
 # Experimental conditions: stressors, nutrients, other
 
 
-
-
-
 #### STEP 1: open data and set up using the file 'database prep May 12 2014'
 # load data file
 dat1 <- data.fat
